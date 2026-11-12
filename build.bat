@@ -11,7 +11,7 @@ REM ============================================================================
 
 setlocal EnableDelayedExpansion
 
-set APP_NAME=Documentador
+set APP_NAME=GoHorseDocumentador
 set VERSION=1.0.0
 
 echo ==================================================
@@ -38,6 +38,10 @@ if exist "build\" rmdir /s /q build
 
 REM 3. Executar PyInstaller
 echo [3/4] Executando PyInstaller...
+if not exist "img\icone.ico" (
+    echo [Aviso] img\icone.ico nao encontrado, gerando assets...
+    python generate_assets.py
+)
 pyinstaller documentador.spec --noconfirm --clean
 
 REM 4. Verificar e renomear saída

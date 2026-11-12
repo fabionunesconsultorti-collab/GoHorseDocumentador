@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-APP_NAME="I+ documentador"
+APP_NAME="GoHorseDocumentador"
 VERSION="1.0.0"
 DIST_DIR="dist"
 BUILD_DIR="build"
@@ -80,10 +80,15 @@ elif [[ "$(uname -s)" == "Linux" ]]; then
         mkdir -p "$PKG_DIR"
         cp "$BINARY" "$PKG_DIR/"
         
+        # Copiar ícone e logotipo para a distribuição
+        cp "img/icone.png" "$PKG_DIR/documentador.png"
+        cp "img/icone.png" "$PKG_DIR/icone.png"
+        cp "img/logo.png" "$PKG_DIR/logo.png"
+        
         # Criar arquivo .desktop para integração com o sistema
         cat > "$PKG_DIR/documentador.desktop" << EOF
 [Desktop Entry]
-Name=Documentador de Processos
+Name=GoHorseDocumentador
 Comment=Ferramenta de documentação de processos ERP com capturas de tela
 Exec=./documentador
 Icon=documentador

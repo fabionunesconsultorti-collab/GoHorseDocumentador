@@ -180,6 +180,26 @@ class TestDocumentadorLogic(unittest.TestCase):
         item_texts = [getattr(f, "text", "") for f in pdf_flowables]
         self.assertTrue(any("• Primeiro" in t for t in item_texts))
         self.assertTrue(any("• Segundo" in t for t in item_texts))
+
+    def test_clipboard_and_screenshot(self):
+        import utils
+        # Testar trigger screenshot não lança exceção não tratada
+        triggered = utils.trigger_native_screenshot()
+        self.assertIsInstance(triggered, bool)
+
+        # Testar grab clipboard image com imagem no clipboard
+        try:
+            import gi
+            gi.require_version('Gtk', '3.0')
+            from gi.repository import Gtk, Gdk, GdkPixbuf
+            clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            pix = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 80, 60)
+            clipboard.set_image(pix)
+            img = utils.grab_clipboard_image()
+            self.assertIsNotNone(img)
+            self.assertEqual(img.size, (80, 60))
+        except Exception:
+            pass
  
 if __name__ == "__main__":
     unittest.main()

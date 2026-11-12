@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import queue
 import threading
 import webbrowser
 import tkinter as tk
@@ -28,11 +29,11 @@ ctk.set_default_color_theme("blue")  # Tema de cores azul padrão (muito elegant
 
 
 class DocumentadorApp(ctk.CTk):
-    # Alturas do painel de descrição nos modos normal e expandido
-    DESC_PANEL_HEIGHT_NORMAL = 300
-    DESC_PANEL_HEIGHT_EXPANDED = 520
-    DESC_TEXTBOX_HEIGHT_NORMAL = 150
-    DESC_TEXTBOX_HEIGHT_EXPANDED = 370
+    # Alturas do painel de descrição nos modos normal e expandido (otimizado para telas compactas)
+    DESC_PANEL_HEIGHT_NORMAL = 135
+    DESC_PANEL_HEIGHT_EXPANDED = 280
+    DESC_TEXTBOX_HEIGHT_NORMAL = 65
+    DESC_TEXTBOX_HEIGHT_EXPANDED = 210
 
     # Intervalo entre autosaves de recuperação (2 minutos)
     AUTOSAVE_INTERVAL_MS = 120_000
@@ -40,10 +41,10 @@ class DocumentadorApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         
-        # Configurações da Janela
-        self.title(f"I+ documentador v{utils.APP_VERSION}")
-        self.geometry("1200x800")
-        self.minimum_size = (1000, 700)
+        # Configurações da Janela (otimizado para caber em telas menores a partir de 1024x600 e 1366x768)
+        self.title(f"GoHorseDocumentador v{utils.APP_VERSION}")
+        self.geometry("1024x640")
+        self.minimum_size = (800, 460)
         self.minsize(self.minimum_size[0], self.minimum_size[1])
         
         # Configurar ícone da janela
@@ -51,7 +52,7 @@ class DocumentadorApp(ctk.CTk):
             icon_path = utils.get_resource_path(os.path.join("img", "icone.png"))
             if os.path.exists(icon_path):
                 img = tk.PhotoImage(file=icon_path)
-                self.iconphoto(False, img)
+                self.iconphoto(True, img)
         except Exception as e:
             print(f"Erro ao carregar ícone: {e}")
         
@@ -90,6 +91,7 @@ class DocumentadorApp(ctk.CTk):
         self.monitoring_clipboard = True
         self.last_clipboard_hash = None
         self.polling_lock = threading.Lock()
+        self.clipboard_queue = queue.Queue()
         
         # Binds globais de teclado para colar imagem
         self.bind("<Control-v>", self.paste_image)
@@ -109,154 +111,172 @@ class DocumentadorApp(ctk.CTk):
         self.after(self.AUTOSAVE_INTERVAL_MS, self._autosave_tick)
 
     def create_top_bar(self):
-        # Frame do topo
-        self.top_bar = ctk.CTkFrame(self, height=45, corner_radius=0)
+        # Frame do topo (compacto para telas menores)
+        self.top_bar = ctk.CTkFrame(self, height=36, corner_radius=0)
         self.top_bar.grid(row=0, column=0, columnspan=2, sticky="nsew", padx=0, pady=(0, 1))
         
         # Botões de Arquivo
-        self.btn_new = ctk.CTkButton(self.top_bar, text="Novo Documento 📄", width=120, command=self.new_document, fg_color="#34495e", hover_color="#2c3e50")
-        self.btn_new.pack(side="left", padx=10, pady=8)
+        self.btn_new = ctk.CTkButton(self.top_bar, text="Novo 📄", width=78, height=26, font=("Ubuntu", 11), command=self.new_document, fg_color="#34495e", hover_color="#2c3e50")
+        self.btn_new.pack(side="left", padx=(6, 2), pady=4)
         
-        self.btn_open = ctk.CTkButton(self.top_bar, text="Abrir Arquivo 📂", width=120, command=self.open_document, fg_color="#34495e", hover_color="#2c3e50")
-        self.btn_open.pack(side="left", padx=5, pady=8)
+        self.btn_open = ctk.CTkButton(self.top_bar, text="Abrir 📂", width=78, height=26, font=("Ubuntu", 11), command=self.open_document, fg_color="#34495e", hover_color="#2c3e50")
+        self.btn_open.pack(side="left", padx=2, pady=4)
         
-        self.btn_save = ctk.CTkButton(self.top_bar, text="Salvar Documento 💾", width=130, command=self.save_document, fg_color="#2ecc71", hover_color="#27ae60")
-        self.btn_save.pack(side="left", padx=5, pady=8)
+        self.btn_save = ctk.CTkButton(self.top_bar, text="Salvar 💾", width=82, height=26, font=("Ubuntu", 11, "bold"), command=self.save_document, fg_color="#26a269", hover_color="#1e7e52")
+        self.btn_save.pack(side="left", padx=2, pady=4)
 
-        self.btn_save_as = ctk.CTkButton(self.top_bar, text="Salvar Como 📁", width=120, command=self.save_document_as, fg_color="#34495e", hover_color="#2c3e50")
-        self.btn_save_as.pack(side="left", padx=5, pady=8)
+        self.btn_save_as = ctk.CTkButton(self.top_bar, text="Salvar Como 📁", width=95, height=26, font=("Ubuntu", 11), command=self.save_document_as, fg_color="#34495e", hover_color="#2c3e50")
+        self.btn_save_as.pack(side="left", padx=2, pady=4)
 
         # Botões de Exportação
-        self.btn_export_pdf = ctk.CTkButton(self.top_bar, text="Exportar PDF 📕", width=120, command=self.export_pdf, fg_color="#e67e22", hover_color="#d35400")
-        self.btn_export_pdf.pack(side="left", padx=5, pady=8)
+        self.btn_export_pdf = ctk.CTkButton(self.top_bar, text="Exportar PDF 📕", width=105, height=26, font=("Ubuntu", 11), command=self.export_pdf, fg_color="#e95420", hover_color="#d34311")
+        self.btn_export_pdf.pack(side="left", padx=(2, 6), pady=4)
         
         # Indicador de Arquivo Atual
-        self.lbl_filename = ctk.CTkLabel(self.top_bar, text="Sem título.docp", font=("Arial", 12, "italic"))
-        self.lbl_filename.pack(side="right", padx=15)
+        self.lbl_filename = ctk.CTkLabel(self.top_bar, text="Sem título.docp", font=("Ubuntu", 11, "italic"))
+        self.lbl_filename.pack(side="right", padx=10)
         
         # Switch de tema escuro/claro
-        self.theme_switch = ctk.CTkSwitch(self.top_bar, text="Modo Escuro", command=self.toggle_theme)
+        self.theme_switch = ctk.CTkSwitch(self.top_bar, text="Escuro 🌙", font=("Ubuntu", 10), width=40, command=self.toggle_theme)
         if ctk.get_appearance_mode() == "Dark":
             self.theme_switch.select()
-        self.theme_switch.pack(side="right", padx=10)
+        self.theme_switch.pack(side="right", padx=6)
 
-        # Botão de verificação de atualizações (consulta releases no GitHub)
+        # Botão de verificação de atualizações
         self.btn_check_update = ctk.CTkButton(
-            self.top_bar, text="Verificar Atualizações 🔄", width=170,
+            self.top_bar, text="Atualizar 🔄", width=90, height=26, font=("Ubuntu", 10),
             command=self.check_for_updates, fg_color="#34495e", hover_color="#2c3e50"
         )
-        self.btn_check_update.pack(side="right", padx=10)
+        self.btn_check_update.pack(side="right", padx=4)
 
     def create_doc_metadata_bar(self):
-        # Barra em linha para Metadados da Documentação (row 1, abaixo dos comandos principais)
-        self.metadata_bar = ctk.CTkFrame(self, height=40, corner_radius=0)
+        # Barra compacta em linha para Metadados da Documentação
+        self.metadata_bar = ctk.CTkFrame(self, height=30, corner_radius=0)
         self.metadata_bar.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=0, pady=(0, 2))
         
         # Título
-        lbl_doc_title = ctk.CTkLabel(self.metadata_bar, text="Título:", font=("Arial", 11, "bold"))
-        lbl_doc_title.pack(side="left", padx=(10, 2), pady=6)
-        self.doc_title_entry = ctk.CTkEntry(self.metadata_bar, height=26)
-        self.doc_title_entry.pack(side="left", fill="x", expand=True, padx=(0, 8), pady=6)
+        lbl_doc_title = ctk.CTkLabel(self.metadata_bar, text="Doc:", font=("Ubuntu", 10, "bold"))
+        lbl_doc_title.pack(side="left", padx=(8, 2), pady=3)
+        self.doc_title_entry = ctk.CTkEntry(self.metadata_bar, placeholder_text="Título do Documento", height=24, font=("Ubuntu", 11))
+        self.doc_title_entry.pack(side="left", fill="x", expand=True, padx=(0, 6), pady=3)
         self.doc_title_entry.insert(0, self.document.title)
         self.doc_title_entry.bind("<KeyRelease>", self.on_doc_title_changed)
         
         # Subtítulo
-        lbl_doc_subtitle = ctk.CTkLabel(self.metadata_bar, text="Subtítulo:", font=("Arial", 11, "bold"))
-        lbl_doc_subtitle.pack(side="left", padx=(4, 2), pady=6)
-        self.doc_subtitle_entry = ctk.CTkEntry(self.metadata_bar, height=26)
-        self.doc_subtitle_entry.pack(side="left", fill="x", expand=True, padx=(0, 8), pady=6)
+        lbl_doc_subtitle = ctk.CTkLabel(self.metadata_bar, text="Sub:", font=("Ubuntu", 10, "bold"))
+        lbl_doc_subtitle.pack(side="left", padx=(2, 2), pady=3)
+        self.doc_subtitle_entry = ctk.CTkEntry(self.metadata_bar, placeholder_text="Subtítulo", height=24, font=("Ubuntu", 11))
+        self.doc_subtitle_entry.pack(side="left", fill="x", expand=True, padx=(0, 6), pady=3)
         self.doc_subtitle_entry.insert(0, self.document.subtitle)
         self.doc_subtitle_entry.bind("<KeyRelease>", self.on_doc_subtitle_changed)
 
         # Categoria
-        lbl_doc_category = ctk.CTkLabel(self.metadata_bar, text="Categoria:", font=("Arial", 11, "bold"))
-        lbl_doc_category.pack(side="left", padx=(4, 2), pady=6)
-        self.doc_category_entry = ctk.CTkEntry(self.metadata_bar, width=130, height=26)
-        self.doc_category_entry.pack(side="left", padx=(0, 8), pady=6)
+        lbl_doc_category = ctk.CTkLabel(self.metadata_bar, text="Cat:", font=("Ubuntu", 10, "bold"))
+        lbl_doc_category.pack(side="left", padx=(2, 2), pady=3)
+        self.doc_category_entry = ctk.CTkEntry(self.metadata_bar, placeholder_text="Categoria", width=110, height=24, font=("Ubuntu", 10))
+        self.doc_category_entry.pack(side="left", padx=(0, 6), pady=3)
         self.doc_category_entry.insert(0, getattr(self.document, "category", ""))
         self.doc_category_entry.bind("<KeyRelease>", self.on_doc_category_changed)
 
         # Tags
-        lbl_doc_tags = ctk.CTkLabel(self.metadata_bar, text="Tags:", font=("Arial", 11, "bold"))
-        lbl_doc_tags.pack(side="left", padx=(4, 2), pady=6)
-        self.doc_tags_entry = ctk.CTkEntry(self.metadata_bar, width=130, height=26)
-        self.doc_tags_entry.pack(side="left", padx=(0, 8), pady=6)
+        lbl_doc_tags = ctk.CTkLabel(self.metadata_bar, text="Tags:", font=("Ubuntu", 10, "bold"))
+        lbl_doc_tags.pack(side="left", padx=(2, 2), pady=3)
+        self.doc_tags_entry = ctk.CTkEntry(self.metadata_bar, placeholder_text="Tags", width=100, height=24, font=("Ubuntu", 10))
+        self.doc_tags_entry.pack(side="left", padx=(0, 6), pady=3)
         self.doc_tags_entry.insert(0, getattr(self.document, "tags", ""))
         self.doc_tags_entry.bind("<KeyRelease>", self.on_doc_tags_changed)
 
         # Autor
-        lbl_doc_author = ctk.CTkLabel(self.metadata_bar, text="Autor:", font=("Arial", 11, "bold"))
-        lbl_doc_author.pack(anchor="w", side="left", padx=(4, 2), pady=6)
-        self.doc_author_entry = ctk.CTkEntry(self.metadata_bar, width=120, height=26)
-        self.doc_author_entry.pack(side="left", padx=(0, 10), pady=6)
+        lbl_doc_author = ctk.CTkLabel(self.metadata_bar, text="Autor:", font=("Ubuntu", 10, "bold"))
+        lbl_doc_author.pack(anchor="w", side="left", padx=(2, 2), pady=3)
+        self.doc_author_entry = ctk.CTkEntry(self.metadata_bar, placeholder_text="Autor", width=95, height=24, font=("Ubuntu", 10))
+        self.doc_author_entry.pack(side="left", padx=(0, 8), pady=3)
         self.doc_author_entry.insert(0, getattr(self.document, "author", ""))
         self.doc_author_entry.bind("<KeyRelease>", self.on_doc_author_changed)
 
     def create_left_sidebar(self):
-        # Frame lateral
-        self.sidebar = ctk.CTkFrame(self, width=280, corner_radius=0)
+        # Frame lateral compacto
+        self.sidebar = ctk.CTkFrame(self, width=210, corner_radius=0)
         self.sidebar.grid(row=2, column=0, sticky="nsew", padx=0, pady=0)
         self.sidebar.grid_rowconfigure(2, weight=1)
         
-        # Logo no painel lateral
+        # Título principal e ícone do aplicativo no painel lateral
+        brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        brand_frame.grid(row=0, column=0, padx=8, pady=(8, 4), sticky="ew")
+        
         try:
-            logo_path = utils.get_resource_path(os.path.join("img", "logo.png"))
-            if os.path.exists(logo_path):
-                pil_logo = Image.open(logo_path)
-                # Redimensionar mantendo proporção (largura desejada = 240)
-                width_target = 240
-                w_percent = (width_target / float(pil_logo.size[0]))
-                h_size = int((float(pil_logo.size[1]) * float(w_percent)))
-                self.logo_ctk_img = ctk.CTkImage(light_image=pil_logo, dark_image=pil_logo, size=(width_target, h_size))
-                self.logo_label = ctk.CTkLabel(self.sidebar, image=self.logo_ctk_img, text="")
-                self.logo_label.grid(row=0, column=0, padx=15, pady=(15, 5))
-        except Exception as e:
-            print(f"Erro ao carregar logo: {e}")
+            icon_path = utils.get_resource_path(os.path.join("img", "icone.png"))
+            if os.path.exists(icon_path):
+                brand_img = Image.open(icon_path)
+                self.brand_icon_ctk = ctk.CTkImage(light_image=brand_img, dark_image=brand_img, size=(24, 24))
+                self.brand_icon_lbl = ctk.CTkLabel(brand_frame, image=self.brand_icon_ctk, text="")
+                self.brand_icon_lbl.pack(side="left", padx=(0, 6))
+        except Exception:
+            pass
+
+        title_container = ctk.CTkFrame(brand_frame, fg_color="transparent")
+        title_container.pack(side="left", fill="x", expand=True)
+
+        self.brand_title = ctk.CTkLabel(
+            title_container, 
+            text="GoHorseDocumentador", 
+            font=("Ubuntu", 13, "bold"),
+            text_color=("#e95420", "#ff7844")
+        )
+        self.brand_title.pack(anchor="w")
+        
+        self.brand_subtitle = ctk.CTkLabel(
+            title_container,
+            text="Documentador de Processos",
+            font=("Ubuntu", 9),
+            text_color=("#5e5c64", "#c0bfbc")
+        )
+        self.brand_subtitle.pack(anchor="w")
         
         # Título dos Passos
-        lbl_sidebar = ctk.CTkLabel(self.sidebar, text="Passos do Processo", font=("Arial", 16, "bold"))
-        lbl_sidebar.grid(row=1, column=0, padx=15, pady=(10, 5), sticky="w")
+        lbl_sidebar = ctk.CTkLabel(self.sidebar, text="Passos do Processo", font=("Ubuntu", 12, "bold"))
+        lbl_sidebar.grid(row=1, column=0, padx=8, pady=(4, 2), sticky="w")
         
-        # Container rolável para a lista de passos (ocupa a maior área vertical da sidebar)
-        self.scroll_steps = ctk.CTkScrollableFrame(self.sidebar, width=250, label_text="")
-        self.scroll_steps.grid(row=2, column=0, padx=10, pady=5, sticky="nsew")
+        # Container rolável para a lista de passos
+        self.scroll_steps = ctk.CTkScrollableFrame(self.sidebar, width=190, label_text="")
+        self.scroll_steps.grid(row=2, column=0, padx=6, pady=2, sticky="nsew")
         
         # Frame inferior da sidebar com botões de Ações de Passos
         actions_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        actions_frame.grid(row=3, column=0, padx=10, pady=15, sticky="ew")
+        actions_frame.grid(row=3, column=0, padx=6, pady=(4, 8), sticky="ew")
         
         # Botões de captura rápida
-        btn_paste = ctk.CTkButton(actions_frame, text="Colar Print (Clipboard) 📋", command=self.paste_image, fg_color="#1a73e8", hover_color="#1557b0")
-        btn_paste.pack(fill="x", pady=4)
+        btn_paste = ctk.CTkButton(actions_frame, text="Colar Print 📋", height=28, font=("Ubuntu", 11, "bold"), command=self.paste_image, fg_color="#e95420", hover_color="#d34311")
+        btn_paste.pack(fill="x", pady=2)
         
-        btn_shoot = ctk.CTkButton(actions_frame, text="Tirar Print da Tela 📸", command=self.capture_screen, fg_color="#1a73e8", hover_color="#1557b0")
-        btn_shoot.pack(fill="x", pady=4)
+        btn_shoot = ctk.CTkButton(actions_frame, text="Capturar Tela 📸", height=26, font=("Ubuntu", 11), command=self.capture_screen, fg_color="#3584e4", hover_color="#1c71d8")
+        btn_shoot.pack(fill="x", pady=2)
         
-        btn_import = ctk.CTkButton(actions_frame, text="Importar Imagem... 🖼️", command=self.import_image, fg_color="#34495e", hover_color="#2c3e50")
-        btn_import.pack(fill="x", pady=4)
+        btn_import = ctk.CTkButton(actions_frame, text="Importar Imagem... 🖼️", height=26, font=("Ubuntu", 10), command=self.import_image, fg_color="#34495e", hover_color="#2c3e50")
+        btn_import.pack(fill="x", pady=2)
         
         # Switch para monitorar área de transferência automaticamente
-        self.monitor_switch = ctk.CTkSwitch(actions_frame, text="Autocolar Novos Prints 🔄", command=self.toggle_clipboard_monitoring)
+        self.monitor_switch = ctk.CTkSwitch(actions_frame, text="Autocolar Prints 🔄", font=("Ubuntu", 10), command=self.toggle_clipboard_monitoring)
         self.monitor_switch.select()
-        self.monitor_switch.pack(fill="x", pady=(10, 4))
+        self.monitor_switch.pack(fill="x", pady=(4, 2))
         
-        # Controles de Ordenação e Exclusão
+        # Controles de Ordenação e Exclusão em linha compacta
         reorder_frame = ctk.CTkFrame(actions_frame, fg_color="transparent")
-        reorder_frame.pack(fill="x", pady=4)
+        reorder_frame.pack(fill="x", pady=2)
         
-        self.btn_up = ctk.CTkButton(reorder_frame, text="Mover ↑", width=70, command=self.move_step_up, fg_color="#95a5a6", hover_color="#7f8c8d", text_color="#1a1a1a")
-        self.btn_up.pack(side="left", padx=(0, 5))
+        self.btn_up = ctk.CTkButton(reorder_frame, text="▲", width=36, height=26, font=("Ubuntu", 11, "bold"), command=self.move_step_up, fg_color="#95a5a6", hover_color="#7f8c8d", text_color="#1a1a1a")
+        self.btn_up.pack(side="left", padx=(0, 2))
         
-        self.btn_down = ctk.CTkButton(reorder_frame, text="Mover ↓", width=70, command=self.move_step_down, fg_color="#95a5a6", hover_color="#7f8c8d", text_color="#1a1a1a")
-        self.btn_down.pack(side="left", padx=5)
+        self.btn_down = ctk.CTkButton(reorder_frame, text="▼", width=36, height=26, font=("Ubuntu", 11, "bold"), command=self.move_step_down, fg_color="#95a5a6", hover_color="#7f8c8d", text_color="#1a1a1a")
+        self.btn_down.pack(side="left", padx=2)
         
-        self.btn_remove_step = ctk.CTkButton(reorder_frame, text="Remover Passo 🗑️", width=100, command=self.remove_step, fg_color="#e74c3c", hover_color="#c0392b")
-        self.btn_remove_step.pack(side="right", padx=(5, 0))
+        self.btn_remove_step = ctk.CTkButton(reorder_frame, text="Excluir 🗑️", height=26, font=("Ubuntu", 10, "bold"), command=self.remove_step, fg_color="#e74c3c", hover_color="#c0392b")
+        self.btn_remove_step.pack(side="right", fill="x", expand=True, padx=(2, 0))
 
     def create_center_workspace(self):
-        # Frame central do editor
+        # Frame central do editor (margens reduzidas para telas menores)
         self.workspace = ctk.CTkFrame(self, fg_color="transparent")
-        self.workspace.grid(row=2, column=1, sticky="nsew", padx=10, pady=10)
+        self.workspace.grid(row=2, column=1, sticky="nsew", padx=(4, 6), pady=(4, 6))
         self.workspace.grid_rowconfigure(1, weight=1)
         self.workspace.grid_columnconfigure(0, weight=1)
         
@@ -265,73 +285,76 @@ class DocumentadorApp(ctk.CTk):
         
         # 2. Canvas de Edição
         self.editor_canvas = EditorCanvas(self.workspace, on_changed_callback=self.on_canvas_changed)
-        self.editor_canvas.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        self.editor_canvas.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
         
         # Placeholder para quando não houver passos
         self.placeholder_label = ctk.CTkLabel(
             self.workspace, 
             text="Adicione ou cole uma captura de tela para começar a documentar.",
-            font=("Arial", 16, "italic"),
+            font=("Ubuntu", 14, "italic"),
             fg_color="#2b2b2b",
             text_color="#888888",
             corner_radius=8
         )
-        self.placeholder_label.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        self.placeholder_label.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
         
         # 3. Painel de Descrições (Parte Inferior)
         self.create_details_panel()
 
     def create_drawing_toolbar(self):
-        self.toolbar = ctk.CTkFrame(self.workspace, height=45)
-        self.toolbar.grid(row=0, column=0, sticky="ew", padx=5, pady=(0, 5))
+        self.toolbar = ctk.CTkFrame(self.workspace, height=32)
+        self.toolbar.grid(row=0, column=0, sticky="ew", padx=2, pady=(0, 2))
         
         # Modos de Ferramenta
         self.tool_var = ctk.StringVar(value="select")
         
-        self.tool_select = ctk.CTkRadioButton(self.toolbar, text="Selecionar 🖱️", variable=self.tool_var, value="select", command=self.change_tool)
-        self.tool_select.pack(side="left", padx=15, pady=10)
+        self.tool_select = ctk.CTkRadioButton(self.toolbar, text="Selecionar 🖱️", font=("Ubuntu", 11), variable=self.tool_var, value="select", command=self.change_tool)
+        self.tool_select.pack(side="left", padx=(6, 4), pady=4)
         
-        self.tool_arrow = ctk.CTkRadioButton(self.toolbar, text="Seta 🏹", variable=self.tool_var, value="arrow", command=self.change_tool)
-        self.tool_arrow.pack(side="left", padx=10, pady=10)
+        self.tool_arrow = ctk.CTkRadioButton(self.toolbar, text="Seta 🏹", font=("Ubuntu", 11), variable=self.tool_var, value="arrow", command=self.change_tool)
+        self.tool_arrow.pack(side="left", padx=4, pady=4)
 
-        self.tool_crop = ctk.CTkRadioButton(self.toolbar, text="Cortar ✂️", variable=self.tool_var, value="crop", command=self.change_tool)
-        self.tool_crop.pack(side="left", padx=10, pady=10)
+        self.tool_crop = ctk.CTkRadioButton(self.toolbar, text="Cortar ✂️", font=("Ubuntu", 11), variable=self.tool_var, value="crop", command=self.change_tool)
+        self.tool_crop.pack(side="left", padx=4, pady=4)
 
-        self.tool_blur = ctk.CTkRadioButton(self.toolbar, text="Borrar 🔒", variable=self.tool_var, value="blur", command=self.change_tool)
-        self.tool_blur.pack(side="left", padx=10, pady=10)
+        self.tool_blur = ctk.CTkRadioButton(self.toolbar, text="Borrar 🔒", font=("Ubuntu", 11), variable=self.tool_var, value="blur", command=self.change_tool)
+        self.tool_blur.pack(side="left", padx=4, pady=4)
 
         # Checkbox para numeração sequencial de setas
         self.num_arrows_var = ctk.BooleanVar(value=True)
         self.cb_num_arrows = ctk.CTkCheckBox(
             self.toolbar, 
-            text="Numerar Setas 🔢", 
+            text="Numerar 🔢", 
+            font=("Ubuntu", 10),
             variable=self.num_arrows_var,
             command=self.toggle_num_arrows
         )
-        self.cb_num_arrows.pack(side="left", padx=15, pady=10)
+        self.cb_num_arrows.pack(side="left", padx=6, pady=4)
         
         # Divisor vertical lógico
         self.lbl_div1 = ctk.CTkLabel(self.toolbar, text="|", text_color="#888888")
-        self.lbl_div1.pack(side="left", padx=10)
+        self.lbl_div1.pack(side="left", padx=4)
         
         # Excluir Elemento Selecionado
         self.btn_delete_element = ctk.CTkButton(
             self.toolbar, 
             text="Excluir Elemento 🗑️", 
-            width=140, 
+            width=110, 
+            height=24,
+            font=("Ubuntu", 10, "bold"),
             fg_color="#e74c3c", 
             hover_color="#c0392b",
             command=self.delete_selected_element
         )
-        self.btn_delete_element.pack(side="left", padx=10, pady=8)
+        self.btn_delete_element.pack(side="left", padx=4, pady=4)
         
         # Divisor vertical lógico
         self.lbl_div2 = ctk.CTkLabel(self.toolbar, text="|", text_color="#888888")
-        self.lbl_div2.pack(side="left", padx=10)
+        self.lbl_div2.pack(side="left", padx=4)
         
         # Cor de Desenho
-        self.lbl_color = ctk.CTkLabel(self.toolbar, text="Cor:")
-        self.lbl_color.pack(side="left", padx=5)
+        self.lbl_color = ctk.CTkLabel(self.toolbar, text="Cor:", font=("Ubuntu", 10))
+        self.lbl_color.pack(side="left", padx=(2, 2))
         
         self.color_var = ctk.StringVar(value="Vermelho")
         self.color_menu = ctk.CTkOptionMenu(
@@ -339,79 +362,70 @@ class DocumentadorApp(ctk.CTk):
             values=["Vermelho", "Azul", "Verde", "Amarelo", "Preto"], 
             variable=self.color_var,
             command=self.change_color,
-            width=100
+            width=90,
+            height=24,
+            font=("Ubuntu", 10)
         )
-        self.color_menu.pack(side="left", padx=5)
+        self.color_menu.pack(side="left", padx=4)
 
     def create_details_panel(self):
         self.details_panel = ctk.CTkFrame(self.workspace, height=self.DESC_PANEL_HEIGHT_NORMAL)
-        self.details_panel.grid(row=2, column=0, sticky="ew", padx=5, pady=(5, 0))
-        self.details_panel.grid_rowconfigure(3, weight=1)
+        self.details_panel.grid(row=2, column=0, sticky="ew", padx=2, pady=(2, 0))
+        self.details_panel.grid_rowconfigure(2, weight=1)
         self.details_panel.grid_columnconfigure(0, weight=1)
 
-        # Título do Passo
+        # Linha 1: Título do Passo + Botão Expandir
         title_frame = ctk.CTkFrame(self.details_panel, fg_color="transparent")
-        title_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(10, 2))
+        title_frame.grid(row=0, column=0, sticky="ew", padx=8, pady=(4, 2))
 
-        lbl_title = ctk.CTkLabel(title_frame, text="Título do Passo:", font=("Arial", 12, "bold"))
-        lbl_title.pack(side="left", padx=(0, 10))
+        lbl_title = ctk.CTkLabel(title_frame, text="Passo:", font=("Ubuntu", 11, "bold"))
+        lbl_title.pack(side="left", padx=(0, 6))
 
-        self.title_entry = ctk.CTkEntry(title_frame)
-        self.title_entry.pack(side="left", fill="x", expand=True)
+        self.title_entry = ctk.CTkEntry(title_frame, placeholder_text="Título do Passo", height=24, font=("Ubuntu", 11))
+        self.title_entry.pack(side="left", fill="x", expand=True, padx=(0, 6))
         self.title_entry.bind("<KeyRelease>", self.sync_step_data)
 
-        # Cabeçalho da Descrição com botão de expandir a área de digitação
-        desc_header = ctk.CTkFrame(self.details_panel, fg_color="transparent")
-        desc_header.grid(row=1, column=0, sticky="ew", padx=15, pady=(2, 0))
-
-        lbl_desc = ctk.CTkLabel(desc_header, text="Explicação / Descrição do Passo:", font=("Arial", 12, "bold"))
-        lbl_desc.pack(side="left")
-
         self.btn_expand_desc = ctk.CTkButton(
-            desc_header, text="Expandir ⤢", width=100, height=24, font=("Arial", 11),
+            title_frame, text="Expandir ⤢", width=80, height=24, font=("Ubuntu", 10),
             fg_color="#34495e", hover_color="#2c3e50", command=self.toggle_description_size
         )
         self.btn_expand_desc.pack(side="right")
 
-        # Barra de Ferramentas de Formatação (WYSIWYG)
+        # Linha 2: Barra de Ferramentas de Formatação (linha única compacta com todos os recursos)
         self.formatting_toolbar = ctk.CTkFrame(self.details_panel, fg_color="transparent")
-        self.formatting_toolbar.grid(row=2, column=0, sticky="ew", padx=15, pady=(4, 2))
-
-        # Linha 1: formatação de texto e listas
-        text_tools = ctk.CTkFrame(self.formatting_toolbar, fg_color="transparent")
-        text_tools.pack(fill="x", pady=(0, 4))
+        self.formatting_toolbar.grid(row=1, column=0, sticky="ew", padx=8, pady=(1, 2))
 
         text_tool_specs = [
-            ("B", 34, ("Arial", 12, "bold"), lambda: self.insert_formatting_tag("**", "**")),
-            ("I", 34, ("Arial", 12, "italic"), lambda: self.insert_formatting_tag("_", "_")),
-            ("U", 34, ("Arial", 12, "underline"), lambda: self.insert_formatting_tag("++", "++")),
-            ("Grifar 🖍️", 80, ("Arial", 11), lambda: self.insert_formatting_tag("==", "==")),
-            ("• Lista", 70, ("Arial", 11), lambda: self.toggle_list_prefix(ordered=False)),
-            ("1. Lista", 75, ("Arial", 11), lambda: self.toggle_list_prefix(ordered=True)),
-            ("Limpar ✖️", 90, ("Arial", 11), self.clear_formatting),
+            ("B", 26, ("Ubuntu", 11, "bold"), lambda: self.insert_formatting_tag("**", "**")),
+            ("I", 26, ("Ubuntu", 11, "italic"), lambda: self.insert_formatting_tag("_", "_")),
+            ("U", 26, ("Ubuntu", 11, "underline"), lambda: self.insert_formatting_tag("++", "++")),
+            ("Grifar 🖍️", 68, ("Ubuntu", 10), lambda: self.insert_formatting_tag("==", "==")),
+            ("• Lista", 58, ("Ubuntu", 10), lambda: self.toggle_list_prefix(ordered=False)),
+            ("1. Lista", 60, ("Ubuntu", 10), lambda: self.toggle_list_prefix(ordered=True)),
+            ("Limpar ✖", 66, ("Ubuntu", 10), self.clear_formatting),
         ]
 
         for text, width, font, command in text_tool_specs:
             ctk.CTkButton(
-                text_tools, text=text, width=width, height=26, font=font,
+                self.formatting_toolbar, text=text, width=width, height=22, font=font,
                 fg_color="#34495e", hover_color="#2c3e50", command=command
-            ).pack(side="left", padx=(0, 5))
+            ).pack(side="left", padx=(0, 3))
 
-        # Linha 2: adesivos (callouts)
-        flag_tools = ctk.CTkFrame(self.formatting_toolbar, fg_color="transparent")
-        flag_tools.pack(fill="x")
+        sep_lbl = ctk.CTkLabel(self.formatting_toolbar, text="|", text_color="#888888")
+        sep_lbl.pack(side="left", padx=4)
 
-        btn_attention = ctk.CTkButton(flag_tools, text="⚠️ Atenção", width=95, height=26, fg_color="#e74c3c", hover_color="#c0392b", font=("Arial", 11, "bold"), command=lambda: self.insert_formatting_tag("[atenção]", "[/atenção]"))
-        btn_attention.pack(side="left", padx=(0, 5))
+        btn_attention = ctk.CTkButton(self.formatting_toolbar, text="⚠️ Atenção", width=78, height=22, fg_color="#e74c3c", hover_color="#c0392b", font=("Ubuntu", 10, "bold"), command=lambda: self.insert_formatting_tag("[atenção]", "[/atenção]"))
+        btn_attention.pack(side="left", padx=2)
 
-        btn_observation = ctk.CTkButton(flag_tools, text="ℹ️ Observação", width=115, height=26, fg_color="#3498db", hover_color="#2980b9", font=("Arial", 11, "bold"), command=lambda: self.insert_formatting_tag("[observação]", "[/observação]"))
-        btn_observation.pack(side="left", padx=5)
+        btn_observation = ctk.CTkButton(self.formatting_toolbar, text="ℹ️ Obs", width=62, height=22, fg_color="#3584e4", hover_color="#1c71d8", font=("Ubuntu", 10, "bold"), command=lambda: self.insert_formatting_tag("[observação]", "[/observação]"))
+        btn_observation.pack(side="left", padx=2)
 
-        btn_concept = ctk.CTkButton(flag_tools, text="💡 Conceito", width=95, height=26, fg_color="#2ecc71", hover_color="#27ae60", font=("Arial", 11, "bold"), command=lambda: self.insert_formatting_tag("[conceito]", "[/conceito]"))
-        btn_concept.pack(side="left", padx=5)
+        btn_concept = ctk.CTkButton(self.formatting_toolbar, text="💡 Conceito", width=78, height=22, fg_color="#26a269", hover_color="#1e7e52", font=("Ubuntu", 10, "bold"), command=lambda: self.insert_formatting_tag("[conceito]", "[/conceito]"))
+        btn_concept.pack(side="left", padx=2)
 
-        self.desc_textbox = ctk.CTkTextbox(self.details_panel, height=self.DESC_TEXTBOX_HEIGHT_NORMAL, undo=True, font=("Arial", 13))
-        self.desc_textbox.grid(row=3, column=0, sticky="nsew", padx=15, pady=(2, 10))
+        # Linha 3: Caixa de Texto da Descrição
+        self.desc_textbox = ctk.CTkTextbox(self.details_panel, height=self.DESC_TEXTBOX_HEIGHT_NORMAL, undo=True, font=("Ubuntu", 11))
+        self.desc_textbox.grid(row=2, column=0, sticky="nsew", padx=8, pady=(1, 4))
         self.desc_textbox.bind("<KeyRelease>", self.sync_step_data)
 
         # Atalhos de teclado padrão de edição
@@ -733,7 +747,7 @@ class DocumentadorApp(ctk.CTk):
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_update_check_done(self, result):
-        self.btn_check_update.configure(state="normal", text="Verificar Atualizações 🔄")
+        self.btn_check_update.configure(state="normal", text="Atualizar 🔄")
 
         if "error" in result:
             messagebox.showerror(
@@ -892,7 +906,7 @@ class DocumentadorApp(ctk.CTk):
         for child in self.scroll_steps.winfo_children():
             if hasattr(child, "step_index"):
                 if child.step_index == selected_idx:
-                    child.configure(fg_color="#1a73e8", hover_color="#1557b0", text_color="#ffffff")
+                    child.configure(fg_color="#e95420", hover_color="#d34311", text_color="#ffffff")
                 else:
                     # Restaurar cores padrão (None não é aceito pelo CustomTkinter)
                     child.configure(fg_color="transparent", hover_color=("gray75", "gray25"), text_color=("gray10", "#DCE4EE"))
@@ -910,26 +924,27 @@ class DocumentadorApp(ctk.CTk):
         for idx, step in enumerate(self.document.steps):
             # Criar thumbnail da imagem original do passo
             thumb_img = step.image.copy()
-            thumb_img.thumbnail((70, 45), Image.Resampling.LANCZOS)
+            thumb_img.thumbnail((50, 32), Image.Resampling.LANCZOS)
             
             # Guardar em CTkImage (fornecendo mesmo objeto em light e dark)
-            ctk_thumb = ctk.CTkImage(light_image=thumb_img, dark_image=thumb_img, size=(70, 45))
+            ctk_thumb = ctk.CTkImage(light_image=thumb_img, dark_image=thumb_img, size=(50, 32))
             self.thumb_images.append(ctk_thumb)  # Manter referência para evitar Garbage Collection
             
             display_title = step.title if step.title else f"Passo {idx + 1}"
             
             btn = ctk.CTkButton(
                 self.scroll_steps,
-                text=f"  {idx + 1}. {display_title}",
+                text=f" {idx + 1}. {display_title}",
                 image=ctk_thumb,
                 compound="left",
                 anchor="w",
-                height=55,
+                height=36,
+                font=("Ubuntu", 11),
                 fg_color="transparent",
                 command=lambda i=idx: self.select_step(i)
             )
             btn.step_index = idx  # Injetar atributo no widget
-            btn.pack(fill="x", pady=2)
+            btn.pack(fill="x", pady=1)
             
         # Re-selecionar o passo atual se válido, ou o último passo, ou nada
         if len(self.document.steps) > 0:
@@ -985,6 +1000,14 @@ class DocumentadorApp(ctk.CTk):
         success = utils.trigger_native_screenshot()
         
         if not success:
+            # Fallback direto: tenta capturar a tela cheia via Pillow
+            img = utils.take_screenshot(self)
+            if img:
+                self.add_new_step_with_image(img)
+                self.deiconify()
+                self.update()
+                return
+
             # Restaurar imediatamente e avisar se falhar
             self.deiconify()
             self.update()
@@ -1035,6 +1058,17 @@ class DocumentadorApp(ctk.CTk):
         if not self.monitoring_clipboard:
             return
 
+        # 1. Processar itens prontos na fila (executado com segurança na thread principal)
+        try:
+            while not self.clipboard_queue.empty():
+                img, current_hash = self.clipboard_queue.get_nowait()
+                if current_hash != self.last_clipboard_hash:
+                    self.last_clipboard_hash = current_hash
+                    self._on_new_clipboard_image(img, current_hash)
+        except Exception as e:
+            print(f"Erro ao processar imagem da fila: {e}")
+
+        # 2. Disparar checagem em background
         def check_in_thread():
             if not self.polling_lock.acquire(blocking=False):
                 return
@@ -1043,8 +1077,7 @@ class DocumentadorApp(ctk.CTk):
                 if img:
                     current_hash = self.get_image_hash(img)
                     if current_hash and current_hash != self.last_clipboard_hash:
-                        # Chamar a atualização de volta na thread principal via after()
-                        self.after(0, lambda: self._on_new_clipboard_image(img, current_hash))
+                        self.clipboard_queue.put((img, current_hash))
             except Exception as e:
                 print(f"Erro ao ler área de transferência: {e}")
             finally:
@@ -1423,7 +1456,7 @@ class DocumentadorApp(ctk.CTk):
     def select_attachment(self, attachment, label_widget):
         for child in self.attachments_listbox.winfo_children():
             child.configure(fg_color="transparent", text_color=("gray10", "#DCE4EE"))
-        label_widget.configure(fg_color="#1a73e8", text_color="#ffffff")
+        label_widget.configure(fg_color="#e95420", text_color="#ffffff")
         self.selected_attachment_data = attachment
 
     def add_step_attachment(self):

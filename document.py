@@ -59,7 +59,7 @@ class Document:
         self.filepath = None
         self.changed = False
         self.title = "Documentação de Processo ERP"
-        self.subtitle = "Documento gerado automaticamente pelo Documentador de Processos"
+        self.subtitle = "Documento gerado automaticamente pelo GoHorseDocumentador"
         self.num_arrows = True
         self.category = ""
         self.tags = ""
@@ -70,7 +70,7 @@ class Document:
         self.filepath = None
         self.changed = False
         self.title = "Documentação de Processo ERP"
-        self.subtitle = "Documento gerado automaticamente pelo Documentador de Processos"
+        self.subtitle = "Documento gerado automaticamente pelo GoHorseDocumentador"
         self.num_arrows = True
         self.category = ""
         self.tags = ""
@@ -183,7 +183,7 @@ class Document:
             metadata = json.loads(metadata_content)
             
             self.title = metadata.get("title", "Documentação de Processo ERP")
-            self.subtitle = metadata.get("subtitle", "Documento gerado automaticamente pelo Documentador de Processos")
+            self.subtitle = metadata.get("subtitle", "Documento gerado automaticamente pelo GoHorseDocumentador")
             self.num_arrows = metadata.get("num_arrows", True)
             self.category = metadata.get("category", "")
             self.tags = metadata.get("tags", "")

@@ -116,7 +116,7 @@ if sys.platform == 'darwin':
         strip=False,
         upx=True,
         console=False,  # Sem terminal no macOS
-        icon='assets/icon.icns' if os.path.exists('assets/icon.icns') else None,
+        icon='img/icone.icns' if os.path.exists('img/icone.icns') else None,
     )
     coll = COLLECT(
         exe,
@@ -131,12 +131,12 @@ if sys.platform == 'darwin':
     app = BUNDLE(
         coll,
         name='Documentador.app',
-        icon='assets/icon.icns' if os.path.exists('assets/icon.icns') else None,
-        bundle_identifier='com.documentador.erp',
+        icon='img/icone.icns' if os.path.exists('img/icone.icns') else None,
+        bundle_identifier='com.gohorse.documentador',
         info_plist={
-            'CFBundleDisplayName': 'Documentador de Processos',
-            'CFBundleShortVersionString': '1.3.0',
-            'CFBundleVersion': '1.3.0',
+            'CFBundleDisplayName': 'GoHorseDocumentador',
+            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleVersion': '1.0.0',
             'NSHighResolutionCapable': True,
             'LSMinimumSystemVersion': '10.15',
         },
@@ -163,7 +163,7 @@ elif sys.platform == 'win32':
         target_arch=None,
         codesign_identity=None,
         entitlements_file=None,
-        icon='assets/icon.ico' if os.path.exists('assets/icon.ico') else None,
+        icon='img/icone.ico' if os.path.exists('img/icone.ico') else None,
         version='version_info.txt' if os.path.exists('version_info.txt') else None,
     )
 

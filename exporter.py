@@ -42,10 +42,12 @@ def get_system_font(size=16):
     Retorna o objeto ImageFont.
     """
     fonts = [
-        "Arial.ttf", "arial.ttf", 
+        "Ubuntu-R.ttf", "Ubuntu.ttf", "ubuntu.ttf",
+        "Cantarell-Regular.ttf", "cantarell.ttf",
         "DejaVuSans.ttf", "dejavusans.ttf", 
-        "Helvetica.ttf", "helvetica.ttf",
         "LiberationSans-Regular.ttf",
+        "Arial.ttf", "arial.ttf", 
+        "Helvetica.ttf", "helvetica.ttf",
         "FreeSans.ttf"
     ]
     for font_name in fonts:
@@ -377,23 +379,23 @@ def parse_description_to_pdf_flowables(description, description_style, available
             if match_att:
                 tag_type = "ATENÇÃO"
                 content = match_att.group(1).strip()
-                bg_color = colors.HexColor("#fdf2f2")
-                border_color = colors.HexColor("#ef4444")
-                text_color = colors.HexColor("#991b1b")
+                bg_color = colors.HexColor("#fff3eb")
+                border_color = colors.HexColor("#e95420")
+                text_color = colors.HexColor("#a03b00")
                 emoji_char = "⚠️"
             elif match_obs:
                 tag_type = "OBSERVAÇÃO"
                 content = match_obs.group(1).strip()
-                bg_color = colors.HexColor("#f0f9ff")
-                border_color = colors.HexColor("#0ea5e9")
-                text_color = colors.HexColor("#075985")
+                bg_color = colors.HexColor("#edf4fe")
+                border_color = colors.HexColor("#3584e4")
+                text_color = colors.HexColor("#1c71d8")
                 emoji_char = "ℹ️"
             else:
                 tag_type = "CONCEITO"
                 content = match_con.group(1).strip()
-                bg_color = colors.HexColor("#f0fdf4")
-                border_color = colors.HexColor("#10b981")
-                text_color = colors.HexColor("#166534")
+                bg_color = colors.HexColor("#ebf8f2")
+                border_color = colors.HexColor("#26a269")
+                text_color = colors.HexColor("#1a7a4c")
                 emoji_char = "💡"
                 
             # Tratar formatação interna (negrito, itálico, sublinhado e grifado)
@@ -436,14 +438,37 @@ def export_to_html(document, filepath):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>__DOC_TITLE__</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --ubuntu-orange: #e95420;
+            --ubuntu-orange-hover: #d34311;
+            --ubuntu-aubergine: #77216f;
+            --ubuntu-dark-aubergine: #2c001e;
+            --gnome-blue: #3584e4;
+            --gnome-green: #26a269;
+            --gtk-bg: #f6f6f7;
+            --gtk-card-bg: #ffffff;
+            --gtk-border: #deddda;
+            --gtk-text-primary: #2e3436;
+            --gtk-text-secondary: #5e5c64;
+            --gtk-text-muted: #868482;
+            --gtk-header-bg: #fafafa;
+            --gtk-shadow: 0 2px 6px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            --font-stack: 'Ubuntu', 'Cantarell', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Ubuntu Mono', 'Source Code Pro', 'Liberation Mono', monospace;
+        }
+
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f5f7fb;
-            color: #333333;
+            font-family: var(--font-stack);
+            background-color: var(--gtk-bg);
+            color: var(--gtk-text-primary);
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
         .container {
             max-width: 1000px;
@@ -451,82 +476,100 @@ def export_to_html(document, filepath):
             padding: 0 20px;
         }
         header {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            background-color: var(--gtk-card-bg);
+            padding: 28px 32px;
+            border-radius: 10px;
+            box-shadow: var(--gtk-shadow);
             margin-bottom: 30px;
-            border-left: 6px solid #1a73e8;
+            border: 1px solid var(--gtk-border);
+            border-left: 6px solid var(--ubuntu-orange);
+            position: relative;
+        }
+        .brand-pill {
+            display: inline-block;
+            background-color: var(--ubuntu-orange);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            margin-bottom: 10px;
         }
         h1 {
-            margin: 0 0 10px 0;
-            color: #1a73e8;
+            margin: 0 0 8px 0;
+            color: var(--ubuntu-orange);
             font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
         }
         .meta-info {
-            color: #666666;
+            color: var(--gtk-text-secondary);
             font-size: 14px;
         }
         .step-card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
+            background-color: var(--gtk-card-bg);
+            border-radius: 10px;
+            box-shadow: var(--gtk-shadow);
+            margin-bottom: 35px;
             overflow: hidden;
-            border: 1px solid #eef2f6;
+            border: 1px solid var(--gtk-border);
         }
         .step-header {
-            background-color: #f8fafc;
-            padding: 15px 25px;
-            border-bottom: 1px solid #eef2f6;
+            background-color: var(--gtk-header-bg);
+            padding: 14px 22px;
+            border-bottom: 1px solid var(--gtk-border);
             display: flex;
             align-items: center;
         }
         .step-number {
-            background-color: #1a73e8;
+            background-color: var(--ubuntu-orange);
             color: #ffffff;
-            font-weight: bold;
+            font-weight: 700;
             width: 28px;
             height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
+            margin-right: 14px;
             font-size: 14px;
+            font-family: var(--font-stack);
         }
         .step-title {
             margin: 0;
-            font-size: 18px;
-            color: #2c3e50;
-            font-weight: 600;
+            font-size: 17px;
+            color: var(--gtk-text-primary);
+            font-weight: 700;
         }
         .step-body {
-            padding: 25px;
+            padding: 24px;
         }
         .image-container {
             text-align: center;
             margin-bottom: 20px;
-            background-color: #fcfcfc;
-            border: 1px solid #f0f0f0;
+            background-color: var(--gtk-bg);
+            border: 1px solid var(--gtk-border);
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
         }
         .step-image {
             max-width: 100%;
             height: auto;
             border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
         .step-description {
-            font-size: 16px;
-            color: #4a5568;
+            font-size: 15px;
+            color: var(--gtk-text-primary);
             white-space: pre-wrap;
-            background-color: #fafbfc;
-            padding: 20px;
+            background-color: #fafafa;
+            padding: 18px 20px;
             border-radius: 8px;
-            border-left: 4px solid #b2ccd6;
+            border-left: 4px solid #aea79f;
             margin: 0;
+            line-height: 1.6;
         }
         .step-description ul,
         .step-description ol {
@@ -541,60 +584,68 @@ def export_to_html(document, filepath):
             display: flex;
             align-items: flex-start;
             padding: 12px 16px;
-            border-radius: 6px;
+            border-radius: 8px;
             margin: 15px 0;
             white-space: normal;
             border-left: 4px solid;
             font-size: 14px;
+            line-height: 1.5;
         }
         .flag-callout strong {
             display: block;
             margin-bottom: 4px;
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .flag-attention {
-            background-color: #fdf2f2;
-            border-left-color: #ef4444;
-            color: #991b1b;
+            background-color: #fff3eb;
+            border-left-color: var(--ubuntu-orange);
+            color: #a03b00;
         }
         .flag-observation {
-            background-color: #f0f9ff;
-            border-left-color: #0ea5e9;
-            color: #075985;
+            background-color: #edf4fe;
+            border-left-color: var(--gnome-blue);
+            color: #1c71d8;
         }
         .flag-concept {
-            background-color: #f0fdf4;
-            border-left-color: #10b981;
-            color: #166534;
+            background-color: #ebf8f2;
+            border-left-color: var(--gnome-green);
+            color: #1a7a4c;
         }
         footer {
             text-align: center;
             margin-top: 50px;
-            padding: 20px;
-            color: #888888;
+            padding: 25px 20px;
+            color: var(--gtk-text-muted);
             font-size: 13px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--gtk-border);
         }
-        .footer-logo {
-            display: block;
-            margin: 10px auto;
-            max-width: 80px;
-            height: auto;
+        .footer-brand {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--ubuntu-orange);
+            margin-bottom: 4px;
+            letter-spacing: 0.2px;
+        }
+        .footer-date {
+            margin: 0;
+            font-size: 12px;
+            color: var(--gtk-text-muted);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <div class="brand-pill">GoHorseDocumentador</div>
             <h1>__DOC_TITLE__</h1>
             <div class="meta-info">__DOC_SUBTITLE__</div>
         </header>
 """
     # Exibir título do documento
     doc_title = getattr(document, "title", "Documentação de Processo ERP")
-    doc_subtitle = getattr(document, "subtitle", "Documento gerado automaticamente pelo Documentador de Processos")
+    doc_subtitle = getattr(document, "subtitle", "Documento gerado automaticamente pelo GoHorseDocumentador")
     header_html = header_html.replace("__DOC_TITLE__", doc_title)
     header_html = header_html.replace("__DOC_SUBTITLE__", doc_subtitle)
     html_content.append(header_html)
@@ -647,25 +698,13 @@ def export_to_html(document, filepath):
         </div>
         """)
 
-    # Converter logo.png para base64 para o rodapé do HTML
-    logo_base64 = ""
-    try:
-        logo_path = utils.get_resource_path(os.path.join("img", "logo.png"))
-        if os.path.exists(logo_path):
-            with open(logo_path, "rb") as image_file:
-                logo_base64 = base64.b64encode(image_file.read()).decode('utf-8')
-    except Exception as e:
-        print(f"Erro ao carregar logo para HTML: {e}")
-        
     from datetime import datetime
     current_date = datetime.now().strftime("%d/%m/%Y %H:%M")
     
-    logo_img_tag = f'<img class="footer-logo" src="data:image/png;base64,{logo_base64}" alt="Logo I+documentador">' if logo_base64 else ''
-    
     html_content.append(f"""
         <footer>
-            <p>Gerado em: {current_date}</p>
-            {logo_img_tag}
+            <div class="footer-brand">GoHorseDocumentador</div>
+            <p class="footer-date">Gerado em: {current_date}</p>
         </footer>
     </div>
 </body>
@@ -690,14 +729,14 @@ def export_to_svg(document, filepath):
     
     # 0. Título e Subtítulo do Documento no topo do SVG
     doc_title = getattr(document, "title", "Documentação de Processo ERP")
-    doc_subtitle = getattr(document, "subtitle", "Documento gerado automaticamente pelo Documentador de Processos")
+    doc_subtitle = getattr(document, "subtitle", "Documento gerado automaticamente pelo GoHorseDocumentador")
     
-    svg_elements.append(f'<text x="{padding}" y="{current_y + 30}" font-family="sans-serif" font-size="28" font-weight="bold" fill="#1a73e8">{doc_title}</text>')
-    svg_elements.append(f'<text x="{padding}" y="{current_y + 55}" font-family="sans-serif" font-size="14" fill="#666666">{doc_subtitle}</text>')
+    svg_elements.append(f'<text x="{padding}" y="{current_y + 30}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="28" font-weight="bold" fill="#e95420">{doc_title}</text>')
+    svg_elements.append(f'<text x="{padding}" y="{current_y + 55}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="14" fill="#5e5c64">{doc_subtitle}</text>')
     
     # Linha divisória após o cabeçalho
     current_y += 75
-    svg_elements.append(f'<line x1="{padding}" y1="{current_y}" x2="{width - padding}" y2="{current_y}" stroke="#1a73e8" stroke-width="2" />')
+    svg_elements.append(f'<line x1="{padding}" y1="{current_y}" x2="{width - padding}" y2="{current_y}" stroke="#e95420" stroke-width="2" />')
     current_y += 30
     
     # Escrever cabeçalho do SVG temporário e acumular elementos
@@ -722,7 +761,7 @@ def export_to_svg(document, filepath):
         
         # 1. Título do Passo
         step_title = step.title if step.title else f"Passo {idx + 1}"
-        svg_elements.append(f'<text x="{padding}" y="{current_y + 25}" font-family="sans-serif" font-size="22" font-weight="bold" fill="#1a73e8">{idx + 1}. {step_title}</text>')
+        svg_elements.append(f'<text x="{padding}" y="{current_y + 25}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="20" font-weight="bold" fill="#2e3436"><tspan fill="#e95420">{idx + 1}.</tspan> {step_title}</text>')
         current_y += 40
         
         # 2. Imagem (Print)
@@ -772,7 +811,7 @@ def export_to_svg(document, filepath):
                     if getattr(document, "num_arrows", True):
                         r = 10
                         svg_elements.append(f'<circle cx="{ax1}" cy="{ay1}" r="{r}" fill="#ffffff" stroke="{color}" stroke-width="2" />')
-                        svg_elements.append(f'<text x="{ax1}" y="{ay1 + 4}" font-family="sans-serif" font-size="11" font-weight="bold" fill="{color}" text-anchor="middle">{arrow_count}</text>')
+                        svg_elements.append(f'<text x="{ax1}" y="{ay1 + 4}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="11" font-weight="bold" fill="{color}" text-anchor="middle">{arrow_count}</text>')
                     
             elif atype == "text":
                 tx = anno["x"] * scale + padding
@@ -785,9 +824,9 @@ def export_to_svg(document, filepath):
                 text_len = len(anno["text"])
                 box_w = text_len * scaled_font_size * 0.6 + 8
                 box_h = scaled_font_size * 1.2 + 4
-                svg_elements.append(f'<rect x="{tx - 4}" y="{ty}" width="{box_w}" height="{box_h}" fill="#ffffff" stroke="{color}" stroke-width="1" />')
+                svg_elements.append(f'<rect x="{tx - 4}" y="{ty}" width="{box_w}" height="{box_h}" fill="#ffffff" stroke="{color}" stroke-width="1" rx="4" />')
                 
-                svg_elements.append(f'<text x="{tx}" y="{ty + scaled_font_size * 0.95}" font-family="sans-serif" font-size="{scaled_font_size}" font-weight="bold" fill="{color}">{anno["text"]}</text>')
+                svg_elements.append(f'<text x="{tx}" y="{ty + scaled_font_size * 0.95}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="{scaled_font_size}" font-weight="bold" fill="{color}">{anno["text"]}</text>')
                 
         current_y += display_h + 20
         
@@ -806,51 +845,39 @@ def export_to_svg(document, filepath):
         if current_line:
             lines.append(" ".join(current_line))
             
-        svg_elements.append(f'<rect x="{padding}" y="{current_y}" width="{display_w}" height="{len(lines)*20 + 20}" fill="#fafbfc" rx="5" stroke="#b2ccd6" stroke-width="2" />')
+        svg_elements.append(f'<rect x="{padding}" y="{current_y}" width="{display_w}" height="{len(lines)*20 + 20}" fill="#ffffff" rx="8" stroke="#deddda" stroke-width="1.5" />')
         
         for l_idx, line in enumerate(lines):
-            svg_elements.append(f'<text x="{padding + 15}" y="{current_y + 25 + (l_idx * 20)}" font-family="sans-serif" font-size="14" fill="#4a5568">{line}</text>')
+            svg_elements.append(f'<text x="{padding + 15}" y="{current_y + 25 + (l_idx * 20)}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="14" fill="#2e3436">{line}</text>')
             
         current_y += (len(lines) * 20) + 50
         
         # Linha separadora entre passos
         if idx < len(document.steps) - 1:
-            svg_elements.append(f'<line x1="{padding}" y1="{current_y}" x2="{width - padding}" y2="{current_y}" stroke="#eef2f6" stroke-width="2" />')
+            svg_elements.append(f'<line x1="{padding}" y1="{current_y}" x2="{width - padding}" y2="{current_y}" stroke="#deddda" stroke-width="1" />')
             current_y += 30
-
-    # Converter logo.png para base64 para o rodapé do SVG
-    logo_base64 = ""
-    try:
-        logo_path = utils.get_resource_path(os.path.join("img", "logo.png"))
-        if os.path.exists(logo_path):
-            with open(logo_path, "rb") as image_file:
-                logo_base64 = base64.b64encode(image_file.read()).decode('utf-8')
-    except Exception as e:
-        print(f"Erro ao carregar logo para SVG: {e}")
 
     # 5. Rodapé do SVG
     current_y += 20
     # Linha acima do rodapé
-    svg_elements.append(f'<line x1="{padding}" y1="{current_y}" x2="{width - padding}" y2="{current_y}" stroke="#e2e8f0" stroke-width="1" />')
+    svg_elements.append(f'<line x1="{padding}" y1="{current_y}" x2="{width - padding}" y2="{current_y}" stroke="#deddda" stroke-width="1" />')
     current_y += 25
     
     # Data no rodapé
     from datetime import datetime
     current_date = datetime.now().strftime("%d/%m/%Y %H:%M")
-    svg_elements.append(f'<text x="{padding}" y="{current_y}" font-family="sans-serif" font-size="11" fill="#718096">Gerado em: {current_date}</text>')
+    svg_elements.append(f'<text x="{padding}" y="{current_y}" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="11" fill="#868482">Gerado em: {current_date}</text>')
     
-    # Logo do I+documentador no centro do rodapé
-    if logo_base64:
-        logo_w = 60
-        logo_h = 15
-        logo_x = (width / 2) - (logo_w / 2)
-        logo_y = current_y - 12
-        svg_elements.append(f'<image href="data:image/png;base64,{logo_base64}" x="{logo_x}" y="{logo_y}" width="{logo_w}" height="{logo_h}" />')
+    # Título do GoHorseDocumentador no centro do rodapé (substitui o logo)
+    brand_text = "GoHorseDocumentador"
+    brand_x = width / 2
+    brand_y = current_y
+    svg_elements.append(f'<text x="{brand_x}" y="{brand_y}" text-anchor="middle" font-family="Ubuntu, Cantarell, DejaVu Sans, sans-serif" font-size="12" font-weight="bold" fill="#e95420">{brand_text}</text>')
         
     current_y += 20
 
     # Adicionar cabeçalho do arquivo completo com a altura final ajustada
-    header_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {current_y}" width="{width}" height="{current_y}" style="background-color: #f5f7fb;">'
+    header_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {current_y}" width="{width}" height="{current_y}" style="background-color: #f6f6f7;">'
     svg_elements.insert(0, header_svg)
     svg_elements.append('</svg>')
     
@@ -879,22 +906,20 @@ def export_to_pdf(document, filepath):
         from datetime import datetime
         current_date = datetime.now().strftime("%d/%m/%Y %H:%M")
         
-        canvas.setStrokeColor(colors.HexColor('#e2e8f0'))
+        canvas.setStrokeColor(colors.HexColor('#deddda'))
         canvas.setLineWidth(0.5)
         canvas.line(40, 45, pdf_doc.pagesize[0] - 40, 45)
         
         canvas.setFont('Helvetica', 8)
-        canvas.setFillColor(colors.HexColor('#718096'))
+        canvas.setFillColor(colors.HexColor('#868482'))
         
         canvas.drawString(40, 30, f"Gerado em: {current_date}")
         canvas.drawRightString(pdf_doc.pagesize[0] - 40, 30, f"Página {pdf_doc.page}")
         
-        try:
-            logo_path = utils.get_resource_path(os.path.join("img", "logo.png"))
-            if os.path.exists(logo_path):
-                canvas.drawImage(logo_path, 267.63, 23, width=60, height=15, mask='auto')
-        except Exception as e:
-            print(f"Erro ao adicionar logo ao rodapé do PDF: {e}")
+        # Título do GoHorseDocumentador no centro do rodapé (substitui o logo)
+        canvas.setFont('Helvetica-Bold', 9)
+        canvas.setFillColor(colors.HexColor('#e95420'))
+        canvas.drawCentredString(pdf_doc.pagesize[0] / 2.0, 30, "GoHorseDocumentador")
             
         canvas.restoreState()
 
@@ -906,7 +931,7 @@ def export_to_pdf(document, filepath):
             fontName='Helvetica-Bold',
             fontSize=24,
             leading=28,
-            textColor=colors.HexColor('#1a73e8'),
+            textColor=colors.HexColor('#e95420'),
             spaceAfter=15
         )
         
@@ -916,7 +941,7 @@ def export_to_pdf(document, filepath):
             fontName='Helvetica',
             fontSize=11,
             leading=14,
-            textColor=colors.HexColor('#666666'),
+            textColor=colors.HexColor('#5e5c64'),
             spaceAfter=15
         )
 
@@ -925,7 +950,7 @@ def export_to_pdf(document, filepath):
             parent=styles['Normal'],
             fontName='Helvetica-Oblique',
             fontSize=10,
-            textColor=colors.HexColor('#4a5568'),
+            textColor=colors.HexColor('#5e5c64'),
             spaceAfter=25
         )
         
@@ -935,7 +960,7 @@ def export_to_pdf(document, filepath):
             fontName='Helvetica-Bold',
             fontSize=16,
             leading=20,
-            textColor=colors.HexColor('#2c3e50'),
+            textColor=colors.HexColor('#2e3436'),
             spaceBefore=10,
             spaceAfter=10
         )
@@ -946,7 +971,7 @@ def export_to_pdf(document, filepath):
             fontName='Helvetica',
             fontSize=11,
             leading=15,
-            textColor=colors.HexColor('#4a5568'),
+            textColor=colors.HexColor('#2e3436'),
             spaceBefore=10,
             spaceAfter=10
         )
@@ -955,7 +980,7 @@ def export_to_pdf(document, filepath):
         
         # Título do Documento
         doc_title = getattr(document, "title", "Documentação de Processo ERP")
-        doc_subtitle = getattr(document, "subtitle", "Documento gerado automaticamente pelo Documentador de Processos")
+        doc_subtitle = getattr(document, "subtitle", "Documento gerado automaticamente pelo GoHorseDocumentador")
         story_list.append(Paragraph(doc_title, title_style))
         story_list.append(Paragraph(doc_subtitle, subtitle_style))
         
@@ -989,8 +1014,8 @@ def export_to_pdf(document, filepath):
         toc_table.setStyle(TableStyle([
             ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c3e50')),
-            ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.HexColor('#1a73e8')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2e3436')),
+            ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.HexColor('#e95420')),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
         ]))
@@ -1118,16 +1143,7 @@ def export_to_wiki_repository(documents, output_dir):
     for d in [output_dir, docs_dir, img_dir, att_dir, css_dir, js_dir]:
         os.makedirs(d, exist_ok=True)
         
-    # 2. Copiar logos/ícones do sistema
-    logo_filename = ""
-    try:
-        logo_path = utils.get_resource_path(os.path.join("img", "logo.png"))
-        if os.path.exists(logo_path):
-            shutil.copy(logo_path, os.path.join(img_dir, "logo.png"))
-            logo_filename = "logo.png"
-    except Exception as e:
-        print(f"Erro ao copiar logo para Wiki: {e}")
-        
+    # 2. Copiar ícones do sistema
     try:
         icon_path = utils.get_resource_path(os.path.join("img", "icone.png"))
         if os.path.exists(icon_path):
@@ -1199,39 +1215,44 @@ def export_to_wiki_repository(documents, output_dir):
         
     # 3. Gerar arquivos estáticos
     
-    # 3.1 style.css (sober, premium, Dark/Light Mode)
+    # 3.1 style.css (Ubuntu, GNOME, GTK - Dark/Light Mode)
     style_content = """/* Variables */
 :root {
-    --bg-primary: #f8fafc;
+    --bg-primary: #f6f6f7;
     --bg-card: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
-    --accent: #1a73e8;
-    --accent-hover: #1557b0;
-    --border: #e2e8f0;
+    --text-primary: #2e3436;
+    --text-secondary: #5e5c64;
+    --text-muted: #868482;
+    --accent: #e95420;
+    --accent-hover: #d34311;
+    --accent-aubergine: #77216f;
+    --gnome-blue: #3584e4;
+    --gnome-green: #26a269;
+    --border: #deddda;
     --header-bg: #ffffff;
-    --sidebar-bg: #f8fafc;
-    --tag-bg: #f1f5f9;
-    --tag-text: #475569;
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --sidebar-bg: #f6f6f7;
+    --tag-bg: #edeceb;
+    --tag-text: #2e3436;
+    --shadow: 0 2px 6px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    --font-stack: 'Ubuntu', 'Cantarell', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'Ubuntu Mono', 'Source Code Pro', 'Liberation Mono', monospace;
 }
 
 [data-theme="dark"] {
-    --bg-primary: #0f172a;
-    --bg-card: #1e293b;
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --accent: #3b82f6;
-    --accent-hover: #60a5fa;
-    --border: #334155;
-    --header-bg: #1e293b;
-    --sidebar-bg: #1e293b;
-    --tag-bg: #334155;
-    --tag-text: #cbd5e1;
-    --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    --bg-primary: #1e1e1e;
+    --bg-card: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #c0bfbc;
+    --text-muted: #868482;
+    --accent: #ff7844;
+    --accent-hover: #e95420;
+    --accent-aubergine: #9c4d92;
+    --border: #3d3d3d;
+    --header-bg: #242424;
+    --sidebar-bg: #242424;
+    --tag-bg: #3d3d3d;
+    --tag-text: #c0bfbc;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -1246,6 +1267,7 @@ body {
     font-family: var(--font-stack);
     line-height: 1.6;
     transition: background-color 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
 }
 
 header {
@@ -1267,8 +1289,18 @@ header {
     gap: 12px;
 }
 
-.header-logo {
-    max-height: 32px;
+.header-brand-badge {
+    background-color: var(--accent);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-stack);
 }
 
 .header-title {
@@ -1276,6 +1308,7 @@ header {
     font-weight: 700;
     color: var(--accent);
     text-decoration: none;
+    font-family: var(--font-stack);
 }
 
 .theme-toggle-btn {
@@ -1287,6 +1320,7 @@ header {
     cursor: pointer;
     font-weight: 600;
     font-size: 0.875rem;
+    font-family: var(--font-stack);
     transition: background-color 0.2s, border-color 0.2s;
 }
 
@@ -1616,19 +1650,35 @@ header {
     letter-spacing: 0.5px;
 }
 .flag-attention {
-    background-color: #fdf2f2;
-    border-left-color: #ef4444;
-    color: #991b1b;
+    background-color: #fff3eb;
+    border-left-color: var(--accent);
+    color: #a03b00;
 }
 .flag-observation {
-    background-color: #f0f9ff;
-    border-left-color: #0ea5e9;
-    color: #075985;
+    background-color: #edf4fe;
+    border-left-color: var(--gnome-blue);
+    color: #1c71d8;
 }
 .flag-concept {
-    background-color: #f0fdf4;
-    border-left-color: #10b981;
-    color: #166534;
+    background-color: #ebf8f2;
+    border-left-color: var(--gnome-green);
+    color: #1a7a4c;
+}
+
+[data-theme="dark"] .flag-attention {
+    background-color: #3b1e11;
+    border-left-color: #ff7844;
+    color: #ffbe9f;
+}
+[data-theme="dark"] .flag-observation {
+    background-color: #172c45;
+    border-left-color: #62a0ea;
+    color: #c0daf8;
+}
+[data-theme="dark"] .flag-concept {
+    background-color: #163624;
+    border-left-color: #57e389;
+    color: #b7f5d0;
 }
 
 .attachments-section {
@@ -1797,21 +1847,22 @@ header {
         </a>
         """)
         
-    logo_tag = f'<img src="img/{logo_filename}" alt="Logo" class="header-logo">' if logo_filename else ''
-    
     index_html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Repositório de Documentações</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="img/icone.png">
 </head>
 <body>
     <header>
         <div class="header-left">
-            {logo_tag}
+            <span class="header-brand-badge">GoHorseDocumentador</span>
             <span class="header-title">Wiki de Documentações</span>
         </div>
         <button id="theme-toggle" class="theme-toggle-btn">🌙 Modo Escuro</button>
@@ -1905,8 +1956,6 @@ header {
             </div>
             """)
             
-        logo_tag_doc = f'<img src="../img/{logo_filename}" alt="Logo" class="header-logo">' if logo_filename else ''
-        
         tags_doc_html = "\n".join([f'<span class="doc-tag">{t}</span>' for t in d["tags"]])
         
         meta_html_doc = []
@@ -1922,13 +1971,16 @@ header {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{d["title"]}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" type="image/png" href="../img/icone.png">
 </head>
 <body>
     <header>
         <div class="header-left">
-            {logo_tag_doc}
+            <span class="header-brand-badge">GoHorseDocumentador</span>
             <a href="../index.html" class="header-title" style="font-size: 0.95rem; text-decoration: underline;">← Voltar ao Portfólio</a>
         </div>
         <button id="theme-toggle" class="theme-toggle-btn">Modo Escuro</button>
